@@ -1,0 +1,1 @@
+# Tjek script NyesteOLA2.R, primært det nederste afsnit  

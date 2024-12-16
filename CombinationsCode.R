@@ -311,9 +311,8 @@ lm_resultater <- list()
 Spørgsmål <- FTI[,3:14]
 
 for (i in 1:length(Kombinationer)) {
-  Kombination <- Kombinationer[[i]]  
+  Kombination <- Kombinationer[[i]] 
   Mean_FTI <- rowMeans(Spørgsmål[, Kombination, drop = FALSE], na.rm = TRUE) 
-  
   # Byg data-frame til regression
   variables_df <- data.frame(FTI = Mean_FTI, forbrug = forbrug)
   
@@ -415,6 +414,21 @@ print(top_df[top_df$kombination_id ==653,])
 #653             0.4549612
 
 
+
+#
+#
+#
+#
+# Lav lige noget korrelation, så det kan stå sammen i en tabel ligesom Baum gjorde
+#
+#
+#
+#
+
+
+
+
+
 #### Opgave 1.3 – Spørgsmål i indikatoren ####
 # Hvilke spørgsmål indgår i den indikator, 
 # som er bedst til at forklare variationen i forbruget? 
@@ -463,6 +477,10 @@ print(top_df[top_df$kombination_id ==653,])
   newest_predict <- predict(lm_model, newdata = newestQ)
   print(round(newest_predict,2))
   # 1.65%
+  #
+  # Beregn manuelt
+  #
+  
   print(round(sd(Forbrugsdata$Årlig_vækst),2))
   #standard afvigelse er på hele 2.8
   
@@ -540,6 +558,9 @@ print(top_df[top_df$kombination_id ==653,])
 
   # Antal kvertaler der skal fjernes, fra hver ende at tidsperioden
   max_steps <- 15
+    # Find baum artikel, tror kan har brugt 9
+  
+  
   
   # Total antal kvataler
   N <- length(forbrug)
@@ -617,7 +638,7 @@ print(top_df[top_df$kombination_id ==653,])
   
    kombi1_id <- 653
    kombi2_id <- 1410
-   fjerne_obs_start <- 10
+   fjerne_obs_start <- 15
    fjerne_obs_slut <- 15
 
   

@@ -252,5 +252,148 @@ Predict_glm_manuelt <- round(as.numeric(1 / (1 + exp(-(glm_1spm_sum$coefficients
 # forbrugsugift stiger? Hvor ofte er det så reelt tilfældet, at den kvartalsvise årlige realvækst i
 # husholdningernes forbrugsudgift stiger, set i forhold til, hvad jeres model forudsiger?
 #  (hint: hvor mange tilfælde af 1 og 1 finder jeres model?)
+  # Indsætte alle værdier, for at matrix kan virke
+Predict_glm_all <- predict(glm_1spm, newdata = FTIForbrug, type = "response") 
+threshold <- 0.6 
+predicted_classes <- ifelse(Predict_glm_all > threshold,"Op","Ned")
+Konfusion_matrix <- table(Predicted = predicted_classes, Actual = FTIForbrug$Retning)
+Konfusion_matrix
+#          Actual
+#Predicted Ned Op
+#.     Ned  13  4
+#.      Op   9 73
+# 0.5 er samme %, men mindre 'ned'
 
+thresholds <- seq(0, 1, by = 0.01)
+best_threshold <- NULL
+best_accuracy <- 0
+
+for (t in thresholds) {
+  predicted_classes <- ifelse(Predict_glm_all > t, "Op", "Ned")
+  cm <- table(Predicted = predicted_classes, Actual = FTIForbrug$Retning)
+  
+  # beregner andelen af korrekt klassificerede observationer i konfusionmatricen.
+  accuracy <- sum(diag(cm)) / sum(cm) # Tager den diagonale/korrekte svar, og dividere med total, for at finde bedste
+  
+  if (accuracy > best_accuracy) {
+    best_accuracy <- accuracy
+    best_threshold <- t
+  }
+}
+cat("Den bedste threshold ifølge accuracy er:", best_threshold, 
+    "med en accuracy på:", best_accuracy, "\n")
+# Vi har dog en bias af Op.. Så vær kritisk
+
+library(pROC)
+roc <- smooth(roc(Forbrugsdata$Retning, Predict_glm_all))
+auc <- auc(roc)
+plot(roc, col = "blue", lwd = 2, main = "ROC-kurven har en Area Under the Curve på 0.821", print.auc = TRUE)
+# AUC på 0.821
+
+# I hånden
+# Omdan faktiske klasser til binært format (Op = 1, Ned = 0)
+actual_binary <- ifelse(FTIForbrug$Retning == "Op", 1, 0)
+
+# Forudsagte sandsynligheder fra din model
+predicted_probs <- Predict_glm_all
+
+# Sortér efter sandsynligheder (højeste først)
+ord <- order(predicted_probs, decreasing = TRUE)
+predicted_probs_sorted <- predicted_probs[ord]
+actual_sorted <- actual_binary[ord]
+
+# Antal positive og negative
+P <- sum(actual_sorted == 1)
+N <- sum(actual_sorted == 0)
+
+# Beregn kumulative TPR og FPR
+TPR <- cumsum(actual_sorted == 1) / P
+FPR <- cumsum(actual_sorted == 0) / N
+
+# Tilføj startpunktet (0,0)
+TPR <- c(0, TPR)
+FPR <- c(0, FPR)
+
+# Beregn AUC med trapezmetoden
+AUC <- sum((FPR[-1] - FPR[-length(FPR)]) * (TPR[-1] + TPR[-length(TPR)])) / 2
+cat("AUC (beregnet manuelt):", AUC, "\n")
+# 0.8217237 aka det samme som før
+
+# Plot ROC-kurven
+plot(FPR, TPR, type = "l", col = "blue", lwd = 2,
+     xlab = "False Positive Rate", ylab = "True Positive Rate",
+     main = "Manuelt beregnet ROC-kurve")
+abline(a=0, b=1, lty=2, col="gray")
+
+
+#### Opgave 3.4 – Potentielle forbedringer af model ####
+# Hvordan I prøve at forbedre jeres model? Lav 2 valgfrie scenarier og test dem i forhold til jeres
+# baseline (underspørgsmålene fra DI’s forbrugertillidsindikator).
+
+# Kunne evt forbedres ved brug af hele DIs 
+# IDK
+test_df <- as.data.frame(FTIForbrug$Retning)
+colnames(test_df) <- "Retning"
+
+#test_df$x_variabel <- rowMeans(FTIForbrug[,c(5,7,9,13)]) # For DI
+#newest_data <- data.frame(FORV1_Q$DI[100]) # For DI
+
+test_df$x_variabel <- FTI$Forbrugertillidsindikatoren # For DST
+newest_data <- data.frame(FORV1_Q$Forbrugertillidsindikatoren[100]) # For DST
+
+colnames(newest_data) <- "x_variabel"
+
+glm_1spm <- glm(Retning~x_variabel,
+                data = test_df, family = binomial)
+glm_1spm_sum <- summary(glm_1spm)
+Predict_glm <- predict(glm_1spm, newdata = newest_data, type = "response")
+Predict_glm_manuelt <- round(as.numeric(1 / (1 + exp(-(glm_1spm_sum$coefficients[1,1] + glm_1spm_sum$coefficients[2,1] * (newest_data))))),3)
+
+
+
+
+thresholds <- seq(0, 1, by = 0.01)
+best_threshold <- NULL
+best_accuracy <- 0
+
+for (t in thresholds) {
+  predicted_classes <- ifelse(Predict_glm_all > t, "Op", "Ned")
+  cm <- table(Predicted = predicted_classes, Actual = test_df$Retning)
+  
+  # beregner andelen af korrekt klassificerede observationer i konfusionmatricen.
+  accuracy <- sum(diag(cm)) / sum(cm) # Tager den diagonale/korrekte svar, og dividere med total, for at finde bedste
+  
+  if (accuracy > best_accuracy) {
+    best_accuracy <- accuracy
+    best_threshold <- t
+  }
+}
+cat("Den bedste threshold ifølge accuracy er:", best_threshold, 
+    "med en accuracy på:", best_accuracy, "\n")
+
+Predict_glm_all <- predict(glm_1spm, newdata = test_df, type = "response") 
+threshold <- best_threshold
+predicted_classes <- ifelse(Predict_glm_all > threshold,"Op","Ned")
+Konfusion_matrix <- table(Predicted = predicted_classes, Actual = test_df$Retning)
+
+
+library(pROC)
+roc <- smooth(roc(Forbrugsdata$Retning, Predict_glm_all))
+auc <- auc(roc)
+plot(roc, col = "blue", lwd = 2, main = "ROC-kurve for modellen", print.auc = TRUE)
+
+# DIs er ikke bedre.... Hvad så med DST? -> gør koden om og se hvad den siger
+# DI - Optimale threshold = 0.6 (accuracy = 0.8383838:
+      #Actual
+      #Predicted Ned Op
+      #Ned  10  4
+      #Op   12 73
+# AUC 0.802
+
+# DST - Optimale threshold 0.69 (auc = 0.8181818)
+      #Actual
+      #Predicted Ned Op
+      #Ned  12  8
+      #Op   10 69
+# AUC 0.771, så den er den værste af de 3
 
