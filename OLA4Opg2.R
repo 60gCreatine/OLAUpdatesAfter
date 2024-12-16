@@ -80,11 +80,11 @@ sales_details_newest <- Bilscrape1[, c(
 )]
 sales_details_newest$prisid <- NA
 sales_details_newest$sold <- NA
-dbWriteTable(con,"car_details",car_details, overwrite = TRUE)
-dbWriteTable(con,"dealer_details",dealer_details, overwrite = TRUE)
-dbWriteTable(con,"sales_details",sales_details, overwrite = TRUE)
+#dbWriteTable(con,"car_details",car_details, overwrite = TRUE)
+#dbWriteTable(con,"dealer_details",dealer_details, overwrite = TRUE)
+#dbWriteTable(con,"sales_details",sales_details, overwrite = TRUE)
 
-
+result <- anti_join(sales_details_newest,sales_details,by=c("carid","pris"))
 
 
 carid_query <- paste0("SELECT carid FROM sales_details")
@@ -94,7 +94,7 @@ sales_details_newest$sold <- as.integer(!(sales_details_newest$carid %in% old_ca
 result <- anti_join(sales_details_newest,sales_details, by = "carid")
 
 
-dbWriteTable(con, "sales_details", sales_details, append = T)
+#dbWriteTable(con, "sales_details", sales_details, append = T)
 
 
 
