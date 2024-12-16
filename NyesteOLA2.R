@@ -198,7 +198,7 @@ glm <- glm(Retning ~
              `Danmarks økonomiske situation i dag  sammenlignet med for et år siden` +
              `Anskaffelse af større forbrugsgoder  fordelagtigt for øjeblikket` +
              `Anskaffelse af større forbrugsgoder  inden for de næste 12 mdr `,
-             ,data = FTIForbrug, family = binomial)
+           ,data = FTIForbrug, family = binomial)
 summary(glm)
 # Klart multikollonaritet
 library(corrplot)
@@ -218,7 +218,7 @@ corrplot(cor,
          tl.col = "black",      # Labels i sort
          number.digits = 2,     # Antal decimaler
          addCoef.col = "black",) # Tilføj koefficienter i sort
-  
+
 # Stor korrelation mellem alle
 
 
@@ -226,7 +226,7 @@ glm_df <- data.frame()
 for (spm in colnames(DI_spm)) {
   formel <- as.formula(paste("Retning ~ `",spm,"`", sep=""))
   tmp_glm <- summary(glm(formel,
-                 data = FTIForbrug, family = binomial))
+                         data = FTIForbrug, family = binomial))
   tmp_df <- as.data.frame(tmp_glm$coefficients)
   tmp_df$`Pr(>|z|)` <- format(tmp_df$`Pr(>|z|)`, scientific = F) 
   glm_df <- rbind(tmp_df,glm_df)
@@ -238,7 +238,7 @@ print(head(glm_df,1))
 #`Danmarks økonomiske situation i dag  sammenlignet med for et år siden` 0.08397921 0.01877462 4.473018 0.00000771234003
 
 glm_1spm <- glm(Retning~`Danmarks økonomiske situation i dag  sammenlignet med for et år siden`,
-           data = FTIForbrug, family = binomial)
+                data = FTIForbrug, family = binomial)
 glm_1spm_sum <- summary(glm_1spm)
 newest_data <- data.frame(FORV1_Q$`Danmarks økonomiske situation i dag  sammenlignet med for et år siden`[100])
 colnames(newest_data) <- "Danmarks økonomiske situation i dag  sammenlignet med for et år siden"
@@ -252,7 +252,7 @@ Predict_glm_manuelt <- round(as.numeric(1 / (1 + exp(-(glm_1spm_sum$coefficients
 # forbrugsugift stiger? Hvor ofte er det så reelt tilfældet, at den kvartalsvise årlige realvækst i
 # husholdningernes forbrugsudgift stiger, set i forhold til, hvad jeres model forudsiger?
 #  (hint: hvor mange tilfælde af 1 og 1 finder jeres model?)
-  # Indsætte alle værdier, for at matrix kan virke
+# Indsætte alle værdier, for at matrix kan virke
 Predict_glm_all <- predict(glm_1spm, newdata = FTIForbrug, type = "response") 
 threshold <- 0.6 
 predicted_classes <- ifelse(Predict_glm_all > threshold,"Op","Ned")
@@ -384,16 +384,23 @@ plot(roc, col = "blue", lwd = 2, main = "ROC-kurve for modellen", print.auc = TR
 
 # DIs er ikke bedre.... Hvad så med DST? -> gør koden om og se hvad den siger
 # DI - Optimale threshold = 0.6 (accuracy = 0.8383838:
-      #Actual
-      #Predicted Ned Op
-      #Ned  10  4
-      #Op   12 73
+#Actual
+#Predicted Ned Op
+#Ned  10  4
+#Op   12 73
 # AUC 0.802
 
 # DST - Optimale threshold 0.69 (auc = 0.8181818)
-      #Actual
-      #Predicted Ned Op
-      #Ned  12  8
-      #Op   10 69
+#Actual
+#Predicted Ned Op
+#Ned  12  8
+#Op   10 69
 # AUC 0.771, så den er den værste af de 3
+
+
+
+
+
+
+
 
