@@ -118,6 +118,7 @@ samlet_plot <- ggplot(Indikatordf, aes(x = Tid)) +
     axis.text.x = element_text(angle = 0, hjust = 0.5),
     plot.title = element_text(size = 14, face = "bold")
   )
+print(samlet_plot)
 
 lm_DI <- lm(Forbrug~DI, data = Indikatordf)
 summary(lm_DI)
@@ -134,17 +135,25 @@ newdataDI <- as.data.frame(FORV1_Q$DI[100])
 colnames(newdataDI) <- "DI"
 ForbrugPredict_DI <- predict(lm_DI, newdata = newdataDI)
 print(ForbrugPredict_DI)
-Manuel_DI <- 2.15675 + (0.18122 * newdataDI$DI)
+# Uden December tal i FORV1
+  # Manuel_DI <- 2.15675 + (0.18122 * newdataDI$DI)
+    # 0.2947145
+# Med December tal i FORV1
+  Manuel_DI <- lm_DI$coefficients[1] + (lm_DI$coefficients[2] * newdataDI$DI)
 print(Manuel_DI)
-# 0.2947145
+# 0.1320084
 
 newdataDST <- as.data.frame(FORV1_Q$Forbrugertillidsindikatoren[100])
 colnames(newdataDST) <- "DST"
 ForbrugPredict_DST <- predict(lm_DST, newdata = newdataDST)
 print(ForbrugPredict_DST)
-Manuel_DST <- 1.31708 + (0.17562 * newdataDST$DST)
+    # Manuel_DST <- 1.31708 + (0.17562 * newdataDST$DST)
+      # -0.281062
+# Med December tal i FORV1
+    #                               1 = B_0                   2 = B_1
+  Manuel_DST <- lm_DST$coefficients[1] + (lm_DST$coefficients[2] * newdataDST)
 print(Manuel_DST)
-# -0.281062
+
 
 #### Opgave 
 # Nej
@@ -245,6 +254,7 @@ colnames(newest_data) <- "Danmarks økonomiske situation i dag  sammenlignet med
 Predict_glm <- predict(glm_1spm, newdata = newest_data, type = "response")
 Predict_glm_manuelt <- round(as.numeric(1 / (1 + exp(-(glm_1spm_sum$coefficients[1,1] + glm_1spm_sum$coefficients[2,1] * (newest_data))))),3)
 # 75% chance for at den stiger
+  # 73.4% chance med December FORV1 tal (giver mening eftersom det er negativt)
 
 
 #### Opgave 3.3 – Simpel validering af model ####
@@ -318,6 +328,7 @@ FPR <- c(0, FPR)
 AUC <- sum((FPR[-1] - FPR[-length(FPR)]) * (TPR[-1] + TPR[-length(TPR)])) / 2
 cat("AUC (beregnet manuelt):", AUC, "\n")
 # 0.8217237 aka det samme som før
+  # 0.8266178  efter dec data
 
 # Plot ROC-kurven
 plot(FPR, TPR, type = "l", col = "blue", lwd = 2,
