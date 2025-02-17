@@ -69,6 +69,23 @@ FTI <- FORV1_Q[1:forbrug_længde, ]
 colnames(FTI)[1] = "Tid"
 Spørgsmål <- FTI[,3:14]
 
+##### Test af Random Forest, ikke releteret til resten af koden! #####
+
+lm_df <- cbind(Indikatordf,Spørgsmål)
+# Fjern tid, DST, FTI
+lm_model <- lm(forbrug ~ .,
+               data = lm_df)
+summary(lm_model)
+
+library(randomForest)
+train <- sample(1:nrow(lm_df), nrow(lm_df)/2)
+colnames(lm_df) <- trimws(colnames(lm_df))
+names(lm_df) <- make.names(names(lm_df))
+
+rF <- randomForest(Forbrug~.,
+                     data=lm_df,subset = train,mtry=13,importance=TRUE)
+rF$importance
+
 
 #### Opgave 2.1 – Opdatering af DI’s forbrugertillidsindikator ####
 # Opdatér DI’s forbrugertillidsindikator med data frem til og med 2023 fra artiklen ”Forbruget
